@@ -1,0 +1,15 @@
+﻿Quadris.obj : error LNK2019: símbolo externo indefinido glfwInit referenciado na função main
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwTerminate referenciado na função "int __cdecl initConfig(struct GLFWwindow *)" (?initConfig@@YAHPEAUGLFWwindow@@@Z)
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwWindowHint referenciado na função main
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwCreateWindow referenciado na função main
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwWindowShouldClose referenciado na função main
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwSetWindowShouldClose referenciado na função "void __cdecl processInput(struct GLFWwindow *,class Piece *,class Grid *)" (?processInput@@YAXPEAUGLFWwindow@@PEAVPiece@@PEAVGrid@@@Z)
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwMaximizeWindow referenciado na função main
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwSetFramebufferSizeCallback referenciado na função "int __cdecl initConfig(struct GLFWwindow *)" (?initConfig@@YAHPEAUGLFWwindow@@@Z)
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwPollEvents referenciado na função main
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwGetKey referenciado na função "void __cdecl processInput(struct GLFWwindow *,class Piece *,class Grid *)" (?processInput@@YAXPEAUGLFWwindow@@PEAVPiece@@PEAVGrid@@@Z)
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwMakeContextCurrent referenciado na função "int __cdecl initConfig(struct GLFWwindow *)" (?initConfig@@YAHPEAUGLFWwindow@@@Z)
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwSwapBuffers referenciado na função main
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwGetProcAddress referenciado na função "int __cdecl initConfig(struct GLFWwindow *)" (?initConfig@@YAHPEAUGLFWwindow@@@Z)
+C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Libraries\glfw3.lib : warning LNK4272: o tipo de máquina da biblioteca 'x86' está em conflito com o tipo de máquina de destino 'x64'
+C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\x64\Debug\Quadris.exe : fatal error LNK1120: 13 externo não resolvidos

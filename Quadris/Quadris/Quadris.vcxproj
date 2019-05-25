@@ -71,7 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Include\GLFW;C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Library;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Libraries;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Include;$(IncludePath)</IncludePath>

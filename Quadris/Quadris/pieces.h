@@ -5,19 +5,24 @@
 
 class Piece
 {
+	friend class Grid;
+
 public:
 	enum class types { L, J, I, O, S, Z, T };
+	enum class rotation { R0, R90, R180, R270 };
 	types type;
 
-	Piece(types t, Shader s)
+	Piece(Shader s, types t, rotation r)
 	{
+		rot = r;
+		type = t;
+
 		// load image, create texture and generate mipmaps
 		int width, height, nrChannels;
 		unsigned char *data;
 
 		model = glm::mat4(1.0f);
-		type = t;
-		setGeoForm(t, s);
+		setGeoForm(s);
 
 		// load and create a texture 
 		// -------------------------
@@ -45,9 +50,9 @@ public:
 		s.setInt("text1", 0);
 	}
 
-	void setGeoForm(types t, Shader s)
+	void setGeoForm(Shader s)
 	{
-		switch (t)
+		switch (type)
 		{
 		case Piece::types::L:
 			positions[0] = glm::vec3(1.0f, -0.5f, 0.0f);
@@ -108,6 +113,14 @@ public:
 		model = glm::translate(model, (glm::vec3)(model * glm::vec4(t, 0.0f)));
 	}
 
+	void rotate(bool d)
+	{
+		if (d)
+			rot = (rotation)(((int)rot + 1) % 4);
+		else
+			rot = (rotation)(((int)rot - 1) % 4);
+	}
+
 	// angle in degrees
 	void rotate(glm::vec3 r, float angle)
 	{
@@ -136,6 +149,7 @@ private:
 	glm::vec3 positions[4], color;
 	glm::mat4 model;
 	unsigned int texture;
+	rotation rot;
 };
 
 #endif // !__pieces_h

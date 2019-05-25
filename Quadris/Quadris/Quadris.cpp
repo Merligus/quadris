@@ -11,14 +11,14 @@
 #include "grid.h"
 
 #include <iostream>
-#include <list>
+#include <random>
 
 // settings
 const unsigned int SCR_WIDTH = 1366;
 const unsigned int SCR_HEIGHT = 768;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, Piece *p, Grid *g);
 int initConfig(GLFWwindow *w);
 void initVertexArray(unsigned int *B, unsigned int *A);
 
@@ -60,60 +60,26 @@ int main()
 	shader.setMat4("projection", projection); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 	shader.setMat4("view", view);
 
+	std::default_random_engine generator;
+	std::uniform_int_distribution<int> distribution_rotation(0, 3);
+	std::uniform_int_distribution<int> distribution_types(0, 6);
 	Grid g(shader);
-	Piece p((Piece::types::I), shader);
-	bool key_a_release, key_d_release, key_s_release, key_q_release, key_e_release;
-	key_a_release = key_d_release = key_s_release = key_q_release = key_e_release = true;
+	Piece p(shader, (Piece::types)distribution_types(generator), (Piece::rotation)distribution_rotation(generator));
+
+	g.start(p);
+	
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))
 	{
 		// input
 		// -----
-		processInput(window);
-
+		processInput(window, &p, &g);
 		
 		// render
 		// ------
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_RELEASE)
-			key_a_release = true;
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_RELEASE)
-			key_d_release = true;
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE)
-			key_s_release = true;
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE)
-			key_q_release = true;
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE)
-			key_e_release = true;
-
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && key_a_release)
-		{
-			p.translate(glm::vec3(-1.0f, 0.0f, 0.0f));
-			key_a_release = false;
-		}
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && key_d_release)
-		{
-			p.translate(glm::vec3(1.0f, 0.0f, 0.0f));
-			key_d_release = false;
-		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && key_s_release)
-		{
-			p.translate(glm::vec3(0.0f, -1.0f, 0.0f));
-			key_s_release = false;
-		}
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS && key_q_release)
-		{
-			p.rotate(glm::vec3(0.0f, 0.0f, 1.0f), 90.0f);
-			key_q_release = false;
-		}
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && key_e_release)
-		{
-			p.rotate(glm::vec3(0.0f, 0.0f, 1.0f), -90.0f);
-			key_e_release = false;
-		}
 
 		// render boxes
 		glBindVertexArray(VAO);
@@ -139,10 +105,48 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, Piece *p, Grid *g)
 {
+	static bool key_a_release = true, key_d_release = true, key_s_release = true, key_q_release = true, key_e_release = true;	
+
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_RELEASE)
+		key_a_release = true;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_RELEASE)
+		key_d_release = true;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE)
+		key_s_release = true;
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE)
+		key_q_release = true;
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE)
+		key_e_release = true;
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && key_a_release)
+	{
+		p->translate(glm::vec3(-1.0f, 0.0f, 0.0f));
+		key_a_release = false;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && key_d_release)
+	{
+		p->translate(glm::vec3(1.0f, 0.0f, 0.0f));
+		key_d_release = false;
+	}
+	/*if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && key_s_release)
+	{
+		p->translate(glm::vec3(0.0f, -1.0f, 0.0f));
+		key_s_release = false;
+	}*/
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS && key_q_release)
+	{
+		p->rotate(glm::vec3(0.0f, 0.0f, 1.0f), 90.0f);
+		key_q_release = false;
+	}
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && key_e_release)
+	{
+		p->rotate(glm::vec3(0.0f, 0.0f, 1.0f), -90.0f);
+		key_e_release = false;
+	}
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
