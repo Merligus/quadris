@@ -110,7 +110,7 @@ public:
 	{
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-5.0f, -10.0f, 0.0f));
-		for (int l = 0; l < 23; l++)
+		for (int l = 0; l < 25; l++)
 			for (int c = 0; c < 10; c++)
 				b[l][c].setPositions(l, c);
 
@@ -119,7 +119,7 @@ public:
 
 		// start positions translated
 		startPositions[(int)Piece::types::L][(int)Piece::rotation::R0].assign(17, 4, 17, 5, 18, 4, 19, 4);
-		startPositions[(int)Piece::types::L][(int)Piece::rotation::R90].assign(18, 3, 18, 4, 18, 5, 19, 4);
+		startPositions[(int)Piece::types::L][(int)Piece::rotation::R90].assign(18, 3, 18, 4, 18, 5, 19, 5);
 		startPositions[(int)Piece::types::L][(int)Piece::rotation::R180].assign(17, 5, 18, 5, 19, 4, 19, 5);
 		startPositions[(int)Piece::types::L][(int)Piece::rotation::R270].assign(18, 3, 19, 3, 19, 4, 19, 5);
 		startPositions[(int)Piece::types::J][(int)Piece::rotation::R0].assign(17, 4, 17, 5, 18, 5, 19, 5);
@@ -214,6 +214,58 @@ public:
 			for (int c = 0; c < 10; c++)
 				if(b[l][c].filled)
 					b[l][c].draw(model, s, text1, text2);
+
+		// draw shadow
+		for (int i = 0; i < 4; i++)
+		{
+			if(currentPieceShadow.positions[i].x == currentPiece.positions[i].x && currentPieceShadow.positions[i].y == currentPiece.positions[i].y)
+				continue;
+			glm::mat4 aux_model = glm::translate(model, glm::vec3(0.5f + currentPieceShadow.positions[i].y, 0.5f + currentPieceShadow.positions[i].x, 0.0f));
+			s.setMat4("model", aux_model);
+			s.setVec3("color", p->color);
+			s.setBool("shadow", true);
+			glLineWidth(3.5f);
+			glDrawArrays(GL_LINE_LOOP, 0, 6);
+			s.setBool("shadow", false);
+		}
+	}
+
+	void lineComplete()
+	{
+		for (int l = 0; l < 21; l++)
+		{
+			bool lineFull = true;
+			for (int c = 0; c < 10; c++)
+			{
+				if (!b[l][c].filled)
+				{
+					lineFull = false;
+					break;
+				}
+			}
+			if (lineFull)
+			{
+				for(int l_aux = l; l_aux < 21; l_aux++)
+					for (int c = 0; c < 10; c++)
+					{
+						b[l_aux][c] = b[l_aux + 1][c];
+						b[l_aux][c].setPositions(l_aux, c);
+					}
+				l--;
+			}
+		}
+	}
+
+	bool lose()
+	{
+		for (int l = 21; l < 24; l++)
+			for (int c = 0; c < 10; c++)
+				if (b[l][c].filled)
+					return true;
+		for (int l = 21; l < 24; l++)
+			for (int c = 0; c < 10; c++)
+				b[l][c].unfillBlock();
+		return false;
 	}
 
 	void start(Piece *p)
@@ -241,48 +293,142 @@ public:
 			else
 				offset++;
 		}
+		currentPiece.positions[0].assign(p0.x, p0.y);
+		currentPiece.positions[1].assign(p1.x, p1.y);
+		currentPiece.positions[2].assign(p2.x, p2.y);
+		currentPiece.positions[3].assign(p3.x, p3.y);
+		attShadow();
 	}
 
 	bool colliding(set ini)
 	{
+		bool right, left, up, down;
+		bool returnVariable;
+		bool need;
+		right = left = up = down = false;
+		returnVariable = false;
 		for (int i = 0; i < 4; i++)
 		{
-			if (currentPiece.positions[i].x > 19 || currentPiece.positions[i].x < 0)
+			do
 			{
-				int direction;
-				if (currentPiece.positions[i].x - ini.positions[i].x > 0)
-					direction = 1;
-				else
-					direction = -1;
-				for (int j = 0; j < 4; j++)
-					currentPiece.positions[j].x = currentPiece.positions[j].x - direction;
-				return true;
-			}
-			else if (currentPiece.positions[i].y > 9 || currentPiece.positions[i].y < 0)
-			{
-				int direction;
-				if (currentPiece.positions[i].y - ini.positions[i].y > 0)
-					direction = 1;
-				else
-					direction = -1;
-				for (int j = 0; j < 4; j++)
-					currentPiece.positions[j].y = currentPiece.positions[j].y - direction;
-				return true;
-			}
-			else if (b[currentPiece.positions[i].x][currentPiece.positions[i].y].filled)
-			{
-				coord direction;
-				direction.x = currentPiece.positions[i].x - ini.positions[i].x;
-				direction.y = currentPiece.positions[i].y - ini.positions[i].y;
-				for (int j = 0; j < 4; j++)
+				need = false;
+				if (currentPiece.positions[i].x > 19 || currentPiece.positions[i].x < 0)
 				{
-					currentPiece.positions[j].x = currentPiece.positions[j].x - direction.x;
-					currentPiece.positions[j].y = currentPiece.positions[j].y - direction.y;
+					int direction;
+					direction = currentPiece.positions[i].x - ini.positions[i].x;
+					if (direction > 0)
+					{
+						direction = 1;
+						down = true;
+						need = true;
+					}
+					else if (direction < 0)
+					{
+						direction = -1;
+						up = true;
+						need = true;
+					}
+					for (int j = 0; j < 4; j++)
+						currentPiece.positions[j].x = currentPiece.positions[j].x - direction;
+					if (up && down)
+					{
+						currentPiece = ini;
+						return true;
+					}
+					returnVariable = true;
 				}
-				return true;
-			}
+				if (currentPiece.positions[i].y > 9 || currentPiece.positions[i].y < 0)
+				{
+					int direction;
+					direction = currentPiece.positions[i].y - ini.positions[i].y;
+					if (direction > 0)
+					{
+						direction = 1;
+						left = true;
+						need = true;
+					}
+					else if (direction < 0)
+					{
+						direction = -1;
+						right = true;
+						need = true;
+					}
+					for (int j = 0; j < 4; j++)
+						currentPiece.positions[j].y = currentPiece.positions[j].y - direction;
+					if (right && left)
+					{
+						currentPiece = ini;
+						return false;
+					}
+				}
+				if (b[currentPiece.positions[i].x][currentPiece.positions[i].y].filled)
+				{
+					coord direction;
+					direction.x = currentPiece.positions[i].x - ini.positions[i].x;
+					if (direction.x != 0)
+					{
+						if (direction.x > 0)
+						{
+							direction.x = 1;
+							down = true;
+							need = true;
+						}
+						else if (direction.x < 0)
+						{
+							direction.x = -1;
+							up = true;
+							returnVariable = true;
+							need = true;
+						}
+						for (int j = 0; j < 4; j++)
+							currentPiece.positions[j].x = currentPiece.positions[j].x - direction.x;
+					}
+					else
+					{
+						direction.y = currentPiece.positions[i].y - ini.positions[i].y;
+						if (direction.y > 0)
+						{
+							direction.y = 1;
+							left = true;
+							need = true;
+						}
+						else if (direction.y < 0)
+						{
+							direction.y = -1;
+							right = true;
+							need = true;
+						}
+						for (int j = 0; j < 4; j++)
+							currentPiece.positions[j].y = currentPiece.positions[j].y - direction.y;
+					}
+					if (up && down)
+					{
+						currentPiece = ini;
+						return true;
+					}
+					else if (right && left)
+					{
+						currentPiece = ini;
+						return false;
+					}
+				}
+			} while (need);
 		}
-		return false;
+		return returnVariable;
+	}
+
+	void fallAllTheWay()
+	{
+		int minX = currentPiece.positions[0].x;
+		for (int i = 1; i < 4; i++)
+			if (currentPiece.positions[i].x < minX)
+				minX = currentPiece.positions[i].x;
+		for (int i = 0; i < minX; i++)
+		{
+			fall();
+			if (change)
+				break;
+		}
 	}
 
 	void rotate(bool clockwise)
@@ -321,9 +467,10 @@ public:
 				currentPiece.positions[i].x = (int)(origen.x + r[0][0] * v.x + r[0][1] * v.y);
 				currentPiece.positions[i].y = (int)(origen.y + r[1][0] * v.x + r[1][1] * v.y);
 			}
-			while (colliding(initial));
+			colliding(initial);
 			for (int i = 0; i < 4; i++)
 				b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+			attShadow();
 		}
 	}
 
@@ -348,6 +495,7 @@ public:
 					currentPiece.positions[i].y++;
 				for (int i = 0; i < 4; i++)
 					b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+				attShadow();
 			}
 		}
 		else
@@ -369,11 +517,12 @@ public:
 					currentPiece.positions[i].y--;
 				for (int i = 0; i < 4; i++)
 					b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+				attShadow();
 			}
 		}
 	}
 
-	void cai()
+	void fall()
 	{
 		set initial = currentPiece;
 		for (int i = 0; i < 4; i++)
@@ -387,11 +536,52 @@ public:
 			b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
 	}
 
+	bool collidingShadow()
+	{
+		for (int i = 0; i < 4; i++)
+			b[currentPiece.positions[i].x][currentPiece.positions[i].y].unfillBlock();
+		for (int i = 0; i < 4; i++)
+		{
+			if (currentPieceShadow.positions[i].x < 0)
+			{
+				for (int j = 0; j < 4; j++)
+					b[currentPiece.positions[j].x][currentPiece.positions[j].y].fillBlock(p->color);
+				return true;
+			}
+			else if (b[currentPieceShadow.positions[i].x][currentPieceShadow.positions[i].y].filled)
+			{
+				for (int j = 0; j < 4; j++)
+					b[currentPiece.positions[j].x][currentPiece.positions[j].y].fillBlock(p->color);
+				return true;
+			}
+		}
+		for (int i = 0; i < 4; i++)
+			b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+		return false;
+	}
+
+	void attShadow()
+	{
+		bool exit = false;
+		currentPieceShadow = currentPiece;
+		while(!exit)
+		{
+			for (int i = 0; i < 4; i++)
+				currentPieceShadow.positions[i].x--;
+			if (collidingShadow())
+			{
+				for (int i = 0; i < 4; i++)
+					currentPieceShadow.positions[i].x++;
+				exit = true;
+			}
+		}
+	}
+
 private:
-	Block b[24][10];
+	Block b[28][10];
 	glm::mat4 model;
 	Piece *p;
-	set startPositions[7][4], currentPiece;
+	set startPositions[7][4], currentPiece, currentPieceShadow;
 	unsigned int text1, text2;
 };
 

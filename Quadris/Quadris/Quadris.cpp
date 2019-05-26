@@ -18,7 +18,7 @@ const unsigned int SCR_WIDTH = 1366;
 const unsigned int SCR_HEIGHT = 768;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window, Piece *p, Grid *g);
+void processInput(GLFWwindow *window, Piece *p, Grid *g, double *ENDGAME);
 int initConfig(GLFWwindow *w);
 void initVertexArray(unsigned int *B, unsigned int *A);
 
@@ -81,53 +81,76 @@ int main()
 	// -----------
 	while (!glfwWindowShouldClose(window))
 	{
-		// input
+
+		if (g.lose())
+		{
+			glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			std::cout << "LOSE\n";
+		}
+		else
+		{
+			// input
 		// -----
-		processInput(window, currentPiece, &g);
-		
-		// render
-		// ------
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+			processInput(window, currentPiece, &g, &ENDGAME);
 
-		if (endgame && glfwGetTime() - ENDGAME >= 1.0f)
-		{
-			time = (int)(scale * glfwGetTime());
-			g.cai();
-			g.change = false;
-			endgame = false;
-			delete currentPiece;
-			currentPiece = nextPiece;
-			g.start(currentPiece);
-			nextPiece = new Piece(shader, (Piece::types)(random_type() % 7), (Piece::rotation)(random_rotation() % 4));
-			nextPiece->setModel(posicaoNextPiece);
+			// render
+			// ------
+			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			if (endgame && glfwGetTime() - ENDGAME >= 0.8f)
+			{
+				time = (int)(scale * glfwGetTime());
+				g.fall();
+				g.change = false;
+				endgame = false;
+				delete currentPiece;
+				currentPiece = nextPiece;
+				g.lineComplete();
+				if (g.lose())
+				{
+					glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+					glClear(GL_COLOR_BUFFER_BIT);
+					std::cout << "LOSE\n";
+				}
+				else
+				{
+					g.start(currentPiece);
+					nextPiece = new Piece(shader, (Piece::types)(random_type() % 7), (Piece::rotation)(random_rotation() % 4));
+					nextPiece->setModel(posicaoNextPiece);
+				}
+			}
+
+			if (!endgame && g.change)
+			{
+				ENDGAME = glfwGetTime();
+				endgame = true;
+				g.change = false;
+			}
+
+			if ((int)(scale * glfwGetTime()) > time)
+			{
+				time = (int)(scale * glfwGetTime());
+				g.fall();
+			}
+
+			// render boxes
+			glBindVertexArray(VAO);
+			g.draw(shader);
+			// currentPiece->draw(shader);
+			nextPiece->draw(shader);
 		}
-
-		if (!endgame && g.change)
-		{
-			ENDGAME = glfwGetTime();
-			endgame = true;
-			g.change = false;
-		}
-
-		if ((int)(scale * glfwGetTime()) > time)
-		{
-			time = (int)(scale * glfwGetTime());
-			g.cai();
-		}
-
-		// render boxes
-		glBindVertexArray(VAO);
-		g.draw(shader);
-		// currentPiece->draw(shader);
-		nextPiece->draw(shader);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+	delete currentPiece;
+	delete nextPiece;
 
+	system("PAUSE");
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
 	glDeleteVertexArrays(1, &VAO);
@@ -141,7 +164,7 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window, Piece *p, Grid *g)
+void processInput(GLFWwindow *window, Piece *p, Grid *g, double *ENDGAME)
 {
 	static bool key_a_release = true, key_d_release = true, key_s_release = true, key_o_release = true, key_p_release = true;	
 
@@ -158,6 +181,7 @@ void processInput(GLFWwindow *window, Piece *p, Grid *g)
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE)
 		key_p_release = true;
 
+	
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && key_a_release)
 	{
 		g->translate(false);
@@ -168,19 +192,21 @@ void processInput(GLFWwindow *window, Piece *p, Grid *g)
 		g->translate(true);
 		key_d_release = false;
 	}
-	/*if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && key_s_release)
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && key_s_release)
 	{
-		p->translate(glm::vec3(0.0f, -1.0f, 0.0f));
+		g->fallAllTheWay();
 		key_s_release = false;
-	}*/
+	}
 	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS && key_o_release)
 	{
 		g->rotate(true);
+		*ENDGAME = glfwGetTime();
 		key_o_release = false;
 	}
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && key_p_release)
 	{
 		g->rotate(false);
+		*ENDGAME = glfwGetTime();
 		key_p_release = false;
 	}
 }
