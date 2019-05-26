@@ -20,8 +20,7 @@ public:
 		// load image, create texture and generate mipmaps
 		int width, height, nrChannels;
 		unsigned char *data;
-
-		model = glm::mat4(1.0f);
+		
 		setGeoForm(s);
 
 		// load and create a texture 
@@ -106,6 +105,11 @@ public:
 		default:
 			break;
 		}
+	}
+
+	void setModel(glm::mat4 m)
+	{
+		model = m;
 	}
 
 	void translate(glm::vec3 t)

@@ -3,6 +3,7 @@
 
 #include "shader_s.h"
 #include "pieces.h"
+#include <math.h>
 
 class Block
 {
@@ -15,7 +16,7 @@ public:
 		color = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
-	void setPositions(unsigned int l, unsigned int c)
+	void setPositions(int l, int c)
 	{
 		column = c;
 		line = l;
@@ -59,14 +60,14 @@ public:
 
 private:
 	glm::vec3 color;
-	unsigned int line, column;
+	int line, column;
 };
 
 class Grid
 {
 	struct coord
 	{
-		unsigned int x, y;
+		int x, y;
 
 		void assign(int a, int b)
 		{
@@ -86,18 +87,34 @@ class Grid
 			positions[2].assign(x3, y3);
 			positions[3].assign(x4, y4);
 		}
+
+		bool contain(int x, int y)
+		{
+			bool flag = false;
+			for (int i = 0; i < 4; i++)
+			{
+				if (positions[i].x == x && positions[i].y == y)
+				{
+					flag = true;
+					break;
+				}
+			}
+			return flag;
+		}
 	};
 
 public:
-	
+	bool change;
+
 	Grid(Shader s)
 	{
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-5.0f, -10.0f, 0.0f));
-		for (int l = 0; l < 20; l++)
+		for (int l = 0; l < 23; l++)
 			for (int c = 0; c < 10; c++)
 				b[l][c].setPositions(l, c);
 
+		change = false;
 		setTexture(s);
 
 		// start positions translated
@@ -199,25 +216,26 @@ public:
 					b[l][c].draw(model, s, text1, text2);
 	}
 
-	void start(Piece p)
+	void start(Piece *p)
 	{
 		bool success = false;
 		int offset = 0;
 		coord p0, p1, p2, p3;
 		
-		p0 = startPositions[(int)p.type][(int)p.rot].positions[0];
-		p1 = startPositions[(int)p.type][(int)p.rot].positions[1];
-		p2 = startPositions[(int)p.type][(int)p.rot].positions[2];
-		p3 = startPositions[(int)p.type][(int)p.rot].positions[3];
+		currentPiece.positions[0] = p0 = startPositions[(int)p->type][(int)p->rot].positions[0];
+		currentPiece.positions[1] = p1 = startPositions[(int)p->type][(int)p->rot].positions[1];
+		currentPiece.positions[2] = p2 = startPositions[(int)p->type][(int)p->rot].positions[2];
+		currentPiece.positions[3] = p3 = startPositions[(int)p->type][(int)p->rot].positions[3];
+		(this->p) = p;
 
 		while (!success && offset <= 4)
 		{
 			if (!b[p0.x + offset][p0.y].filled && !b[p1.x + offset][p1.y].filled && !b[p2.x + offset][p2.y].filled && !b[p3.x + offset][p3.y].filled)
 			{
-				b[p0.x + offset][p0.y].fillBlock(p.color);
-				b[p1.x + offset][p1.y].fillBlock(p.color);
-				b[p2.x + offset][p2.y].fillBlock(p.color);
-				b[p3.x + offset][p3.y].fillBlock(p.color);
+				b[p0.x + offset][p0.y].fillBlock(p->color);
+				b[p1.x + offset][p1.y].fillBlock(p->color);
+				b[p2.x + offset][p2.y].fillBlock(p->color);
+				b[p3.x + offset][p3.y].fillBlock(p->color);
 				success = true;
 			}
 			else
@@ -225,10 +243,155 @@ public:
 		}
 	}
 
+	bool colliding(set ini)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (currentPiece.positions[i].x > 19 || currentPiece.positions[i].x < 0)
+			{
+				int direction;
+				if (currentPiece.positions[i].x - ini.positions[i].x > 0)
+					direction = 1;
+				else
+					direction = -1;
+				for (int j = 0; j < 4; j++)
+					currentPiece.positions[j].x = currentPiece.positions[j].x - direction;
+				return true;
+			}
+			else if (currentPiece.positions[i].y > 9 || currentPiece.positions[i].y < 0)
+			{
+				int direction;
+				if (currentPiece.positions[i].y - ini.positions[i].y > 0)
+					direction = 1;
+				else
+					direction = -1;
+				for (int j = 0; j < 4; j++)
+					currentPiece.positions[j].y = currentPiece.positions[j].y - direction;
+				return true;
+			}
+			else if (b[currentPiece.positions[i].x][currentPiece.positions[i].y].filled)
+			{
+				coord direction;
+				direction.x = currentPiece.positions[i].x - ini.positions[i].x;
+				direction.y = currentPiece.positions[i].y - ini.positions[i].y;
+				for (int j = 0; j < 4; j++)
+				{
+					currentPiece.positions[j].x = currentPiece.positions[j].x - direction.x;
+					currentPiece.positions[j].y = currentPiece.positions[j].y - direction.y;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void rotate(bool clockwise)
+	{
+		if (Piece::types::O != p->type)
+		{
+			glm::mat2 r;
+			glm::vec2 v, origen;
+			set initial = currentPiece;
+			if (Piece::types::I == p->type)
+				r = { {0, 1}, {-1, 0} };
+			else
+			{
+				if (clockwise)
+					r = { {0, -1}, {1, 0} };
+				else
+					r = { {0, 1}, {-1, 0} };
+			}
+			for (int i = 0; i < 4; i++)
+				b[currentPiece.positions[i].x][currentPiece.positions[i].y].unfillBlock();
+			if (Piece::types::S == p->type || Piece::types::Z == p->type)
+			{
+				r = { {0, -1}, {1, 0} };
+				origen.x = (float)floor((currentPiece.positions[0].x + currentPiece.positions[1].x + currentPiece.positions[2].x + currentPiece.positions[3].x) / 4.0f);
+				origen.y = (float)round((currentPiece.positions[0].y + currentPiece.positions[1].y + currentPiece.positions[2].y + currentPiece.positions[3].y) / 4.0f);
+			}
+			else
+			{
+				origen.x = (float)round((currentPiece.positions[0].x + currentPiece.positions[1].x + currentPiece.positions[2].x + currentPiece.positions[3].x) / 4.0f);
+				origen.y = (float)round((currentPiece.positions[0].y + currentPiece.positions[1].y + currentPiece.positions[2].y + currentPiece.positions[3].y) / 4.0f);
+			}
+			for (int i = 0; i < 4; i++)
+			{
+				v.x = currentPiece.positions[i].x - origen.x;
+				v.y = currentPiece.positions[i].y - origen.y;
+				currentPiece.positions[i].x = (int)(origen.x + r[0][0] * v.x + r[0][1] * v.y);
+				currentPiece.positions[i].y = (int)(origen.y + r[1][0] * v.x + r[1][1] * v.y);
+			}
+			while (colliding(initial));
+			for (int i = 0; i < 4; i++)
+				b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+		}
+	}
+
+	void translate(bool right)
+	{
+		if (right)
+		{
+			bool can = true;
+			for (int i = 0; i < 4; i++)
+			{
+				if (currentPiece.positions[i].y == 9)
+					can = false;
+				else if (b[currentPiece.positions[i].x][currentPiece.positions[i].y + 1].filled
+						&& !currentPiece.contain(currentPiece.positions[i].x, currentPiece.positions[i].y + 1))
+					can = false;
+			}
+			if (can)
+			{
+				for (int i = 0; i < 4; i++)
+					b[currentPiece.positions[i].x][currentPiece.positions[i].y].unfillBlock();
+				for (int i = 0; i < 4; i++)
+					currentPiece.positions[i].y++;
+				for (int i = 0; i < 4; i++)
+					b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+			}
+		}
+		else
+		{
+			bool can = true;
+			for (int i = 0; i < 4; i++)
+			{
+				if (currentPiece.positions[i].y == 0)
+					can = false;
+				else if (b[currentPiece.positions[i].x][currentPiece.positions[i].y - 1].filled
+					&& !currentPiece.contain(currentPiece.positions[i].x, currentPiece.positions[i].y - 1))
+					can = false;
+			}
+			if (can)
+			{
+				for (int i = 0; i < 4; i++)
+					b[currentPiece.positions[i].x][currentPiece.positions[i].y].unfillBlock();
+				for (int i = 0; i < 4; i++)
+					currentPiece.positions[i].y--;
+				for (int i = 0; i < 4; i++)
+					b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+			}
+		}
+	}
+
+	void cai()
+	{
+		set initial = currentPiece;
+		for (int i = 0; i < 4; i++)
+		{
+			b[currentPiece.positions[i].x][currentPiece.positions[i].y].unfillBlock();
+			currentPiece.positions[i].x--;
+		}
+		if (colliding(initial))
+			change = true;
+		for (int i = 0; i < 4; i++)
+			b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+	}
+
 private:
 	Block b[24][10];
 	glm::mat4 model;
-	set startPositions[7][4];
+	Piece *p;
+	set startPositions[7][4], currentPiece;
 	unsigned int text1, text2;
 };
 

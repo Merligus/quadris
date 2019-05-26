@@ -1,4 +1,5 @@
-﻿Quadris.obj : error LNK2019: símbolo externo indefinido glfwInit referenciado na função main
+﻿  Quadris.cpp
+Quadris.obj : error LNK2019: símbolo externo indefinido glfwInit referenciado na função main
 Quadris.obj : error LNK2019: símbolo externo indefinido glfwTerminate referenciado na função "int __cdecl initConfig(struct GLFWwindow *)" (?initConfig@@YAHPEAUGLFWwindow@@@Z)
 Quadris.obj : error LNK2019: símbolo externo indefinido glfwWindowHint referenciado na função main
 Quadris.obj : error LNK2019: símbolo externo indefinido glfwCreateWindow referenciado na função main

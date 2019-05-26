@@ -60,13 +60,22 @@ int main()
 	shader.setMat4("projection", projection); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 	shader.setMat4("view", view);
 
-	std::default_random_engine generator;
-	std::uniform_int_distribution<int> distribution_rotation(0, 3);
-	std::uniform_int_distribution<int> distribution_types(0, 6);
+	std::random_device random_rotation, random_type;
 	Grid g(shader);
-	Piece p(shader, (Piece::types)distribution_types(generator), (Piece::rotation)distribution_rotation(generator));
-
-	g.start(p);
+	//Piece currentPiece(shader, (Piece::types)6, (Piece::rotation)0);
+	Piece *currentPiece, *nextPiece;
+	currentPiece = new Piece(shader, (Piece::types)(random_type() % 7), (Piece::rotation)(random_rotation() % 4));
+	nextPiece = new Piece(shader, (Piece::types)(random_type() % 7), (Piece::rotation)(random_rotation() % 4));
+	
+	glm::mat4 posicaoNextPiece = glm::mat4(1.0f);
+	posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(8.0f, 8.0f, 0.0f));
+	nextPiece->setModel(posicaoNextPiece);
+	
+	g.start(currentPiece);
+	int time = (int)glfwGetTime();
+	double ENDGAME = glfwGetTime();
+	float scale = 10.0f;
+	bool endgame = false;
 	
 	// render loop
 	// -----------
@@ -74,17 +83,44 @@ int main()
 	{
 		// input
 		// -----
-		processInput(window, &p, &g);
+		processInput(window, currentPiece, &g);
 		
 		// render
 		// ------
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		if (endgame && glfwGetTime() - ENDGAME >= 1.0f)
+		{
+			time = (int)(scale * glfwGetTime());
+			g.cai();
+			g.change = false;
+			endgame = false;
+			delete currentPiece;
+			currentPiece = nextPiece;
+			g.start(currentPiece);
+			nextPiece = new Piece(shader, (Piece::types)(random_type() % 7), (Piece::rotation)(random_rotation() % 4));
+			nextPiece->setModel(posicaoNextPiece);
+		}
+
+		if (!endgame && g.change)
+		{
+			ENDGAME = glfwGetTime();
+			endgame = true;
+			g.change = false;
+		}
+
+		if ((int)(scale * glfwGetTime()) > time)
+		{
+			time = (int)(scale * glfwGetTime());
+			g.cai();
+		}
+
 		// render boxes
 		glBindVertexArray(VAO);
 		g.draw(shader);
-		p.draw(shader);
+		// currentPiece->draw(shader);
+		nextPiece->draw(shader);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -107,7 +143,7 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window, Piece *p, Grid *g)
 {
-	static bool key_a_release = true, key_d_release = true, key_s_release = true, key_q_release = true, key_e_release = true;	
+	static bool key_a_release = true, key_d_release = true, key_s_release = true, key_o_release = true, key_p_release = true;	
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -117,19 +153,19 @@ void processInput(GLFWwindow *window, Piece *p, Grid *g)
 		key_d_release = true;
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE)
 		key_s_release = true;
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE)
-		key_q_release = true;
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE)
-		key_e_release = true;
+	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_RELEASE)
+		key_o_release = true;
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE)
+		key_p_release = true;
 
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && key_a_release)
 	{
-		p->translate(glm::vec3(-1.0f, 0.0f, 0.0f));
+		g->translate(false);
 		key_a_release = false;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && key_d_release)
 	{
-		p->translate(glm::vec3(1.0f, 0.0f, 0.0f));
+		g->translate(true);
 		key_d_release = false;
 	}
 	/*if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && key_s_release)
@@ -137,15 +173,15 @@ void processInput(GLFWwindow *window, Piece *p, Grid *g)
 		p->translate(glm::vec3(0.0f, -1.0f, 0.0f));
 		key_s_release = false;
 	}*/
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS && key_q_release)
+	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS && key_o_release)
 	{
-		p->rotate(glm::vec3(0.0f, 0.0f, 1.0f), 90.0f);
-		key_q_release = false;
+		g->rotate(true);
+		key_o_release = false;
 	}
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && key_e_release)
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && key_p_release)
 	{
-		p->rotate(glm::vec3(0.0f, 0.0f, 1.0f), -90.0f);
-		key_e_release = false;
+		g->rotate(false);
+		key_p_release = false;
 	}
 }
 
