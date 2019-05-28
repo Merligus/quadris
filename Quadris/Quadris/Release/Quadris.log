@@ -1,0 +1,23 @@
+﻿  Quadris.cpp
+LINK : warning LNK4098: defaultlib 'MSVCRTD' conflita com uso de outras bibliotecas; use /NODEFAULTLIB:library
+  Gerando código
+  80 of 535 functions (15.0%) were compiled, the rest were copied from previous compilation.
+    64 functions were new in current compilation
+    14 functions had inline decision re-evaluated but remain unchanged
+  Finalizada a geração de código
+glfw3.lib(context.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(context.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(init.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(init.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(input.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(input.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(monitor.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(monitor.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(vulkan.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(vulkan.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(window.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(window.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(win32_init.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(win32_init.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(win32_joystick.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(win32_joystick.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(win32_monitor.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(win32_monitor.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(win32_time.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(win32_time.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(win32_thread.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(win32_thread.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(win32_window.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(win32_window.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(wgl_context.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(wgl_context.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(egl_context.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(egl_context.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+glfw3.lib(osmesa_context.obj) : warning LNK4099: PDB 'glfw.pdb' não foi encontrado 'glfw3.lib(osmesa_context.obj)' ou no 'C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\glfw.pdb'; vinculando objeto quando quando sem nenhuma informação de depuração
+  Quadris.vcxproj -> C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Release\Quadris.exe

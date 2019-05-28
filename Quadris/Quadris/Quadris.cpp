@@ -11,16 +11,19 @@
 #include "grid.h"
 
 #include <iostream>
+#include <vector>
 #include <random>
 
 // settings
 const unsigned int SCR_WIDTH = 1366;
 const unsigned int SCR_HEIGHT = 768;
+bool collapse = false;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window, Piece *p, Grid *g, double *ENDGAME);
 int initConfig(GLFWwindow *w);
 void initVertexArray(unsigned int *B, unsigned int *A);
+int pop_bag(std::vector<int> *bag, int nth);
 
 int main()
 {
@@ -62,19 +65,36 @@ int main()
 
 	std::random_device random_rotation, random_type;
 	Grid g(shader);
-	//Piece currentPiece(shader, (Piece::types)6, (Piece::rotation)0);
-	Piece *currentPiece, *nextPiece;
-	currentPiece = new Piece(shader, (Piece::types)(random_type() % 7), (Piece::rotation)(random_rotation() % 4));
-	nextPiece = new Piece(shader, (Piece::types)(random_type() % 7), (Piece::rotation)(random_rotation() % 4));
+	Piece *currentPiece, *nextPiece1, *nextPiece2, *nextPiece3, *nextPiece4, *nextPiece5, *nextPiece6;
+	std::vector<int> bag;
+	for (int i = 0; i < 7; i++)
+		bag.push_back(i);
+	currentPiece = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+	nextPiece1 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+	nextPiece2 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+	nextPiece3 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+	nextPiece4 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+	nextPiece5 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+	nextPiece6 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
 	
-	glm::mat4 posicaoNextPiece = glm::mat4(1.0f);
-	posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(8.0f, 8.0f, 0.0f));
-	nextPiece->setModel(posicaoNextPiece);
+	glm::mat4 posicaoNextPiece = glm::mat4(g.model);
+	posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(15.5f, 21.0f, -10.0f));
+	nextPiece1->setModel(posicaoNextPiece);
+	posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+	nextPiece2->setModel(posicaoNextPiece);
+	posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+	nextPiece3->setModel(posicaoNextPiece);
+	posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+	nextPiece4->setModel(posicaoNextPiece);
+	posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+	nextPiece5->setModel(posicaoNextPiece);
+	posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+	nextPiece6->setModel(posicaoNextPiece);
 	
 	g.start(currentPiece);
 	int time = (int)glfwGetTime();
 	double ENDGAME = glfwGetTime();
-	float scale = 10.0f;
+	float scale = 1.0f;
 	bool endgame = false;
 	
 	// render loop
@@ -82,10 +102,8 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 
-		if (g.lose())
+		if (g.lost && endgame && glfwGetTime() - ENDGAME >= 0.8f)
 		{
-			glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
 			std::cout << "LOSE\n";
 		}
 		else
@@ -99,35 +117,50 @@ int main()
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			if (endgame && glfwGetTime() - ENDGAME >= 0.8f)
+			if ((endgame && g.change && glfwGetTime() - ENDGAME >= 0.6f) || collapse)
 			{
 				time = (int)(scale * glfwGetTime());
-				g.fall();
+				g.change = false;
+				g.fallAllTheWay();
 				g.change = false;
 				endgame = false;
-				delete currentPiece;
-				currentPiece = nextPiece;
 				g.lineComplete();
+				delete currentPiece;
+				currentPiece = nextPiece1;
+				nextPiece1 = nextPiece2;
+				nextPiece2 = nextPiece3;
+				nextPiece3 = nextPiece4;
+				nextPiece4 = nextPiece5;
+				nextPiece5 = nextPiece6;
 				if (g.lose())
 				{
-					glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-					glClear(GL_COLOR_BUFFER_BIT);
 					std::cout << "LOSE\n";
+					continue;
 				}
-				else
-				{
-					g.start(currentPiece);
-					nextPiece = new Piece(shader, (Piece::types)(random_type() % 7), (Piece::rotation)(random_rotation() % 4));
-					nextPiece->setModel(posicaoNextPiece);
-				}
+				g.start(currentPiece);
+				nextPiece6 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+				glm::mat4 posicaoNextPiece = glm::mat4(g.model);
+				posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(15.5f, 21.0f, -10.0f));
+				nextPiece1->setModel(posicaoNextPiece);
+				posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+				nextPiece2->setModel(posicaoNextPiece);
+				posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+				nextPiece3->setModel(posicaoNextPiece);
+				posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+				nextPiece4->setModel(posicaoNextPiece);
+				posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+				nextPiece5->setModel(posicaoNextPiece);
+				posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+				nextPiece6->setModel(posicaoNextPiece);
 			}
 
 			if (!endgame && g.change)
 			{
 				ENDGAME = glfwGetTime();
 				endgame = true;
-				g.change = false;
 			}
+			else if (endgame && !g.change)
+				endgame = false;
 
 			if ((int)(scale * glfwGetTime()) > time)
 			{
@@ -138,17 +171,26 @@ int main()
 			// render boxes
 			glBindVertexArray(VAO);
 			g.draw(shader);
-			// currentPiece->draw(shader);
-			nextPiece->draw(shader);
+			nextPiece1->draw(shader);
+			nextPiece2->draw(shader);
+			nextPiece3->draw(shader);
+			nextPiece4->draw(shader);
+			nextPiece5->draw(shader);
+			nextPiece6->draw(shader);
 		}
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		if (collapse)
+		{
+			time = (int)(scale * glfwGetTime());
+			collapse = false;
+		}
 	}
 	delete currentPiece;
-	delete nextPiece;
+	delete nextPiece1;
 
 	system("PAUSE");
 	// optional: de-allocate all resources once they've outlived their purpose:
@@ -166,7 +208,7 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window, Piece *p, Grid *g, double *ENDGAME)
 {
-	static bool key_a_release = true, key_d_release = true, key_s_release = true, key_o_release = true, key_p_release = true;	
+	static bool key_a_release = true, key_d_release = true, key_i_release = true, key_o_release = true, key_p_release = true;
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -174,8 +216,8 @@ void processInput(GLFWwindow *window, Piece *p, Grid *g, double *ENDGAME)
 		key_a_release = true;
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_RELEASE)
 		key_d_release = true;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE)
-		key_s_release = true;
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_RELEASE)
+		key_i_release = true;
 	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_RELEASE)
 		key_o_release = true;
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE)
@@ -187,15 +229,17 @@ void processInput(GLFWwindow *window, Piece *p, Grid *g, double *ENDGAME)
 		g->translate(false);
 		key_a_release = false;
 	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		g->fall();
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && key_d_release)
 	{
 		g->translate(true);
 		key_d_release = false;
 	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && key_s_release)
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS && key_i_release)
 	{
-		g->fallAllTheWay();
-		key_s_release = false;
+		key_i_release = false;
+		collapse = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS && key_o_release)
 	{
@@ -271,4 +315,17 @@ void initVertexArray(unsigned int *B, unsigned int *A)
 	// texture coord attribute
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+}
+
+int pop_bag(std::vector<int> *bag, int nth)
+{
+	int chosen, index = nth % bag->size(), temp;
+	chosen = temp = bag->at(index);
+	bag->at(index) = bag->back();
+	bag->at(bag->size() - 1) = temp;
+	bag->pop_back();
+	if (bag->empty())
+		for (int i = 0; i < 7; i++)
+			bag->push_back(i);
+	return chosen;
 }

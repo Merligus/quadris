@@ -104,7 +104,8 @@ class Grid
 	};
 
 public:
-	bool change;
+	bool change, lost;
+	glm::mat4 model;
 
 	Grid(Shader s)
 	{
@@ -114,6 +115,7 @@ public:
 			for (int c = 0; c < 10; c++)
 				b[l][c].setPositions(l, c);
 
+		lost = false;
 		change = false;
 		setTexture(s);
 
@@ -261,7 +263,10 @@ public:
 		for (int l = 21; l < 24; l++)
 			for (int c = 0; c < 10; c++)
 				if (b[l][c].filled)
+				{
+					lost = true;
 					return true;
+				}
 		for (int l = 21; l < 24; l++)
 			for (int c = 0; c < 10; c++)
 				b[l][c].unfillBlock();
@@ -274,10 +279,10 @@ public:
 		int offset = 0;
 		coord p0, p1, p2, p3;
 		
-		currentPiece.positions[0] = p0 = startPositions[(int)p->type][(int)p->rot].positions[0];
-		currentPiece.positions[1] = p1 = startPositions[(int)p->type][(int)p->rot].positions[1];
-		currentPiece.positions[2] = p2 = startPositions[(int)p->type][(int)p->rot].positions[2];
-		currentPiece.positions[3] = p3 = startPositions[(int)p->type][(int)p->rot].positions[3];
+		p0 = startPositions[(int)p->type][(int)p->rot].positions[0];
+		p1 = startPositions[(int)p->type][(int)p->rot].positions[1];
+		p2 = startPositions[(int)p->type][(int)p->rot].positions[2];
+		p3 = startPositions[(int)p->type][(int)p->rot].positions[3];
 		(this->p) = p;
 
 		while (!success && offset <= 4)
@@ -293,11 +298,18 @@ public:
 			else
 				offset++;
 		}
-		currentPiece.positions[0].assign(p0.x, p0.y);
-		currentPiece.positions[1].assign(p1.x, p1.y);
-		currentPiece.positions[2].assign(p2.x, p2.y);
-		currentPiece.positions[3].assign(p3.x, p3.y);
-		attShadow();
+		if (!success)
+		{
+			lost = true;
+		}
+		else
+		{
+			currentPiece.positions[0].assign(p0.x + offset, p0.y);
+			currentPiece.positions[1].assign(p1.x + offset, p1.y);
+			currentPiece.positions[2].assign(p2.x + offset, p2.y);
+			currentPiece.positions[3].assign(p3.x + offset, p3.y);
+			attShadow();
+		}
 	}
 
 	bool colliding(set ini)
@@ -312,7 +324,7 @@ public:
 			do
 			{
 				need = false;
-				if (currentPiece.positions[i].x > 19 || currentPiece.positions[i].x < 0)
+				if (currentPiece.positions[i].x > 24 || currentPiece.positions[i].x < 0)
 				{
 					int direction;
 					direction = currentPiece.positions[i].x - ini.positions[i].x;
@@ -336,6 +348,7 @@ public:
 						return true;
 					}
 					returnVariable = true;
+					i = -1;
 				}
 				if (currentPiece.positions[i].y > 9 || currentPiece.positions[i].y < 0)
 				{
@@ -360,6 +373,7 @@ public:
 						currentPiece = ini;
 						return false;
 					}
+					i = -1;
 				}
 				if (b[currentPiece.positions[i].x][currentPiece.positions[i].y].filled)
 				{
@@ -411,6 +425,7 @@ public:
 						currentPiece = ini;
 						return false;
 					}
+					i = -1;
 				}
 			} while (need);
 		}
@@ -439,7 +454,9 @@ public:
 			glm::vec2 v, origen;
 			set initial = currentPiece;
 			if (Piece::types::I == p->type)
+			{
 				r = { {0, 1}, {-1, 0} };
+			}
 			else
 			{
 				if (clockwise)
@@ -470,7 +487,14 @@ public:
 			colliding(initial);
 			for (int i = 0; i < 4; i++)
 				b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
-			attShadow();
+			if ((int)p->type >= 2 && (int)p->type <= 5)
+			{
+				if (clockwise)
+					translate(false);
+				attShadow();
+			}
+			else
+				attShadow();
 		}
 	}
 
@@ -532,6 +556,8 @@ public:
 		}
 		if (colliding(initial))
 			change = true;
+		else
+			change = false;
 		for (int i = 0; i < 4; i++)
 			b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
 	}
@@ -579,7 +605,6 @@ public:
 
 private:
 	Block b[28][10];
-	glm::mat4 model;
 	Piece *p;
 	set startPositions[7][4], currentPiece, currentPieceShadow;
 	unsigned int text1, text2;
