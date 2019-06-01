@@ -3,6 +3,8 @@
 
 #include "shader_s.h"
 
+class PiecePtr;
+
 class Piece
 {
 	friend class Grid;
@@ -16,6 +18,7 @@ public:
 	{
 		rot = r;
 		type = t;
+		count_ = 0;
 
 		// load image, create texture and generate mipmaps
 		int width, height, nrChannels;
@@ -154,6 +157,29 @@ private:
 	glm::mat4 model;
 	unsigned int texture;
 	rotation rot;
+	friend class PiecePtr;
+	unsigned count_;
+};
+
+class PiecePtr {
+public:
+	Piece* operator-> () { return p_; }
+	Piece& operator* () { return *p_; }
+	PiecePtr(Piece* p) : p_(p) { ++p_->count_; }  // p must not be null
+	~PiecePtr() { if (--p_->count_ == 0) delete p_; }
+	PiecePtr(const PiecePtr& p) : p_(p.p_) { ++p_->count_; }
+	PiecePtr& operator= (const PiecePtr& p)
+	{ // DO NOT CHANGE THE ORDER OF THESE STATEMENTS!
+	  // (This order properly handles self-assignment)
+	  // (This order also properly handles recursion, e.g., if a Piece contains PiecePtrs)
+		Piece* const old = p_;
+		p_ = p.p_;
+		++p_->count_;
+		if (--old->count_ == 0) delete old;
+		return *this;
+	}
+private:
+	Piece* p_;    // p_ is never NULL
 };
 
 #endif // !__pieces_h

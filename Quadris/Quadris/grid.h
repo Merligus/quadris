@@ -105,7 +105,9 @@ class Grid
 
 public:
 	bool change, lost;
-	glm::mat4 model;
+	double ENDGAME;
+	bool endgame, scaleBack;
+	float scale, fastScale, normalScale;
 
 	Grid(Shader s)
 	{
@@ -115,9 +117,16 @@ public:
 			for (int c = 0; c < 10; c++)
 				b[l][c].setPositions(l, c);
 
+		scale = normalScale = 1.0f;
+		fastScale = 20.0f;
+		level = 0;
 		lost = false;
 		change = false;
+		endgame = false;
+		scaleBack = false;
+		points = 0.0f;
 		setTexture(s);
+		ENDGAME = glfwGetTime();
 
 		// start positions translated
 		startPositions[(int)Piece::types::L][(int)Piece::rotation::R0].assign(17, 4, 17, 5, 18, 4, 19, 4);
@@ -207,6 +216,11 @@ public:
 		s.setInt("text2", 1);
 	}
 
+	glm::mat4 getModel()
+	{
+		return model;
+	}
+
 	void draw(Shader s)
 	{
 		for (int l = 0; l < 20; l++)
@@ -224,7 +238,7 @@ public:
 				continue;
 			glm::mat4 aux_model = glm::translate(model, glm::vec3(0.5f + currentPieceShadow.positions[i].y, 0.5f + currentPieceShadow.positions[i].x, 0.0f));
 			s.setMat4("model", aux_model);
-			s.setVec3("color", p->color);
+			s.setVec3("color", (*p)->color);
 			s.setBool("shadow", true);
 			glLineWidth(3.5f);
 			glDrawArrays(GL_LINE_LOOP, 0, 6);
@@ -234,6 +248,7 @@ public:
 
 	void lineComplete()
 	{
+		int counter = 0;
 		for (int l = 0; l < 21; l++)
 		{
 			bool lineFull = true;
@@ -247,6 +262,7 @@ public:
 			}
 			if (lineFull)
 			{
+				counter++;
 				for(int l_aux = l; l_aux < 21; l_aux++)
 					for (int c = 0; c < 10; c++)
 					{
@@ -255,6 +271,23 @@ public:
 					}
 				l--;
 			}
+		}
+		switch (counter)
+		{
+		case 1:
+			points += 40 * (level + 1);
+			break;
+		case 2:
+			points += 100 * (level + 1);
+			break;
+		case 3:
+			points += 300 * (level + 1);
+			break;
+		case 4:
+			points += 1200 * (level + 1);
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -273,43 +306,42 @@ public:
 		return false;
 	}
 
-	void start(Piece *p)
+	void start(PiecePtr *p)
 	{
 		bool success = false;
 		int offset = 0;
 		coord p0, p1, p2, p3;
 		
-		p0 = startPositions[(int)p->type][(int)p->rot].positions[0];
-		p1 = startPositions[(int)p->type][(int)p->rot].positions[1];
-		p2 = startPositions[(int)p->type][(int)p->rot].positions[2];
-		p3 = startPositions[(int)p->type][(int)p->rot].positions[3];
+		p0 = startPositions[(int)(*p)->type][(int)(*p)->rot].positions[0];
+		p1 = startPositions[(int)(*p)->type][(int)(*p)->rot].positions[1];
+		p2 = startPositions[(int)(*p)->type][(int)(*p)->rot].positions[2];
+		p3 = startPositions[(int)(*p)->type][(int)(*p)->rot].positions[3];
 		(this->p) = p;
 
 		while (!success && offset <= 4)
 		{
 			if (!b[p0.x + offset][p0.y].filled && !b[p1.x + offset][p1.y].filled && !b[p2.x + offset][p2.y].filled && !b[p3.x + offset][p3.y].filled)
 			{
-				b[p0.x + offset][p0.y].fillBlock(p->color);
-				b[p1.x + offset][p1.y].fillBlock(p->color);
-				b[p2.x + offset][p2.y].fillBlock(p->color);
-				b[p3.x + offset][p3.y].fillBlock(p->color);
+				b[p0.x + offset][p0.y].fillBlock((*p)->color);
+				b[p1.x + offset][p1.y].fillBlock((*p)->color);
+				b[p2.x + offset][p2.y].fillBlock((*p)->color);
+				b[p3.x + offset][p3.y].fillBlock((*p)->color);
 				success = true;
 			}
 			else
 				offset++;
 		}
-		if (!success)
-		{
+		currentPiece.positions[0].assign(p0.x + offset, p0.y);
+		currentPiece.positions[1].assign(p1.x + offset, p1.y);
+		currentPiece.positions[2].assign(p2.x + offset, p2.y);
+		currentPiece.positions[3].assign(p3.x + offset, p3.y);
+		int minX = currentPiece.positions[0].x;
+		for (int i = 1; i < 4; i++)
+			if (currentPiece.positions[i].x < minX)
+				minX = currentPiece.positions[i].x;
+		if (minX > 20)
 			lost = true;
-		}
-		else
-		{
-			currentPiece.positions[0].assign(p0.x + offset, p0.y);
-			currentPiece.positions[1].assign(p1.x + offset, p1.y);
-			currentPiece.positions[2].assign(p2.x + offset, p2.y);
-			currentPiece.positions[3].assign(p3.x + offset, p3.y);
-			attShadow();
-		}
+		attShadow();
 	}
 
 	bool colliding(set ini)
@@ -321,8 +353,8 @@ public:
 		returnVariable = false;
 		for (int i = 0; i < 4; i++)
 		{
-			do
-			{
+			//do
+			//{
 				need = false;
 				if (currentPiece.positions[i].x > 24 || currentPiece.positions[i].x < 0)
 				{
@@ -348,7 +380,7 @@ public:
 						return true;
 					}
 					returnVariable = true;
-					i = -1;
+					i = need? -1 : i;
 				}
 				if (currentPiece.positions[i].y > 9 || currentPiece.positions[i].y < 0)
 				{
@@ -373,7 +405,7 @@ public:
 						currentPiece = ini;
 						return false;
 					}
-					i = -1;
+					i = need ? -1 : i;
 				}
 				if (b[currentPiece.positions[i].x][currentPiece.positions[i].y].filled)
 				{
@@ -425,9 +457,9 @@ public:
 						currentPiece = ini;
 						return false;
 					}
-					i = -1;
+					i = need ? -1 : i;
 				}
-			} while (need);
+			/*} while (need);*/
 		}
 		return returnVariable;
 	}
@@ -448,12 +480,12 @@ public:
 
 	void rotate(bool clockwise)
 	{
-		if (Piece::types::O != p->type)
+		if (Piece::types::O != (*p)->type)
 		{
 			glm::mat2 r;
 			glm::vec2 v, origen;
 			set initial = currentPiece;
-			if (Piece::types::I == p->type)
+			if (Piece::types::I == (*p)->type)
 			{
 				r = { {0, 1}, {-1, 0} };
 			}
@@ -466,7 +498,7 @@ public:
 			}
 			for (int i = 0; i < 4; i++)
 				b[currentPiece.positions[i].x][currentPiece.positions[i].y].unfillBlock();
-			if (Piece::types::S == p->type || Piece::types::Z == p->type)
+			if (Piece::types::S == (*p)->type || Piece::types::Z == (*p)->type)
 			{
 				r = { {0, -1}, {1, 0} };
 				origen.x = (float)floor((currentPiece.positions[0].x + currentPiece.positions[1].x + currentPiece.positions[2].x + currentPiece.positions[3].x) / 4.0f);
@@ -486,8 +518,8 @@ public:
 			}
 			colliding(initial);
 			for (int i = 0; i < 4; i++)
-				b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
-			if ((int)p->type >= 2 && (int)p->type <= 5)
+				b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock((*p)->color);
+			if ((int)(*p)->type >= 2 && (int)(*p)->type <= 5)
 			{
 				if (clockwise)
 					translate(false);
@@ -500,6 +532,7 @@ public:
 
 	void translate(bool right)
 	{
+		set initial = currentPiece;
 		if (right)
 		{
 			bool can = true;
@@ -518,7 +551,7 @@ public:
 				for (int i = 0; i < 4; i++)
 					currentPiece.positions[i].y++;
 				for (int i = 0; i < 4; i++)
-					b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+					b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock((*p)->color);
 				attShadow();
 			}
 		}
@@ -540,7 +573,7 @@ public:
 				for (int i = 0; i < 4; i++)
 					currentPiece.positions[i].y--;
 				for (int i = 0; i < 4; i++)
-					b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+					b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock((*p)->color);
 				attShadow();
 			}
 		}
@@ -559,7 +592,7 @@ public:
 		else
 			change = false;
 		for (int i = 0; i < 4; i++)
-			b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+			b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock((*p)->color);
 	}
 
 	bool collidingShadow()
@@ -571,18 +604,18 @@ public:
 			if (currentPieceShadow.positions[i].x < 0)
 			{
 				for (int j = 0; j < 4; j++)
-					b[currentPiece.positions[j].x][currentPiece.positions[j].y].fillBlock(p->color);
+					b[currentPiece.positions[j].x][currentPiece.positions[j].y].fillBlock((*p)->color);
 				return true;
 			}
 			else if (b[currentPieceShadow.positions[i].x][currentPieceShadow.positions[i].y].filled)
 			{
 				for (int j = 0; j < 4; j++)
-					b[currentPiece.positions[j].x][currentPiece.positions[j].y].fillBlock(p->color);
+					b[currentPiece.positions[j].x][currentPiece.positions[j].y].fillBlock((*p)->color);
 				return true;
 			}
 		}
 		for (int i = 0; i < 4; i++)
-			b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock(p->color);
+			b[currentPiece.positions[i].x][currentPiece.positions[i].y].fillBlock((*p)->color);
 		return false;
 	}
 
@@ -603,11 +636,31 @@ public:
 		}
 	}
 
+	float getPoints()
+	{
+		return points;
+	}
+
+	int getLevel()
+	{
+		return level;
+	}
+
+	void setLevel(int l)
+	{
+		level = l;
+		scale = normalScale = 2*level + 1.0f;
+		fastScale = 2*level + 19.0f;
+	}
+
 private:
 	Block b[28][10];
-	Piece *p;
+	PiecePtr *p;
+	glm::mat4 model;
 	set startPositions[7][4], currentPiece, currentPieceShadow;
 	unsigned int text1, text2;
+	float points;
+	int level;
 };
 
 #endif // !__grid_h

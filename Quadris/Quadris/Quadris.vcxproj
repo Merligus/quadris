@@ -76,10 +76,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Libraries;$(LibraryPath)</LibraryPath>
+    <OutDir>.</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Libraries;$(LibraryPath)</LibraryPath>
+    <OutDir>.</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -133,7 +135,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Include\imgui.cpp" />
+    <ClCompile Include="..\..\Include\imgui_draw.cpp" />
+    <ClCompile Include="..\..\Include\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\..\Include\imgui_impl_opengl3.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="imgui_demo.cpp" />
     <ClCompile Include="Quadris.cpp" />
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
@@ -142,6 +149,11 @@
     <None Include="transform.vs" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Include\imconfig.h" />
+    <ClInclude Include="..\..\Include\imgui.h" />
+    <ClInclude Include="..\..\Include\imgui_impl_glfw.h" />
+    <ClInclude Include="..\..\Include\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\..\Include\imgui_internal.h" />
     <ClInclude Include="..\..\Include\shader_s.h" />
     <ClInclude Include="grid.h" />
     <ClInclude Include="pieces.h" />
