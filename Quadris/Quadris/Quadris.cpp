@@ -45,6 +45,7 @@ bool cursorEnterWindowEvent(int entered);
 static void ShowAppControlOverlay(bool *p_open);
 static void ShowAppPointOverlay(float points);
 static void ShowAppPauseOverlay(GLFWwindow* window);
+bool my_comp(glm::vec2 i, glm::vec2 j) { return (i.x > j.x); }
 
 int main()
 {
@@ -167,7 +168,7 @@ int main()
 	nextPiece6->setModel(posicaoNextPiece);
 
 	g->start(&currentPiece);
-	time = (int)(g->scale * glfwGetTime());
+	time = -1;
 	
 	float deltaTime;
 	bool control_window = true;
@@ -198,19 +199,114 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (menu)
+		static bool demo = false;
+		if (demo)
+			ImGui::ShowDemoWindow(&demo);
+		else if (menu)
 		{
 			ImGui::SetNextWindowPosCenter();
 			if (ImGui::Begin("MENU", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
 			{
 				ImGui::PushItemWidth(-1);
-				ImGui::SetWindowSize(ImVec2(400, 180));
-				if (ImGui::Button("1 JOGADOR", ImVec2(ImGui::GetWindowSize().x - 15.0f, 0.0f)))
+				ImGui::SetWindowSize(ImVec2(400, 215));
+				if (time != -1)
+				{
+					ImGui::SetWindowSize(ImVec2(400, 253));
+					if (ImGui::Button("CONTINUAR", ImVec2(ImGui::GetWindowSize().x - 15.0f, 0.0f)))
+					{
+						ImGui::CloseCurrentPopup();
+						player_1 = true;
+						paused = true;
+						menu = false;
+					}
+				}
+				if (ImGui::Button("NOVO JOGO", ImVec2(ImGui::GetWindowSize().x - 15.0f, 0.0f)))
 				{
 					ImGui::CloseCurrentPopup();
-					player_1 = true;
-					paused = true;
-					menu = false;
+					if(time != -1)
+						ImGui::OpenPopup("CERTEZA?");
+					else
+						ImGui::OpenPopup("NICK?");
+				}				
+				if (ImGui::BeginPopupModal("CERTEZA?", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+				{
+					ImGui::SetWindowSize(ImVec2(500, 150));
+					ImGui::Text("O JOGO MAIS RECENTE SERA SOBREESCRITO!\nCERTEZA QUE QUER CRIAR UM NOVO JOGO?!?!?!\n\n");
+					ImGui::Separator();
+
+					if (ImGui::Button("SIM", ImVec2(ImGui::GetWindowSize().x / 2.0f - 15.0f, 0.0f)))
+					{
+						g->saveScore();
+						delete g;
+						g = new Grid(shader);
+
+						while (!bag.empty())
+							bag.pop_back();
+						for (int i = 0; i < 7; i++)
+							bag.push_back(i);
+
+						currentPiece = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+						nextPiece1 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+						nextPiece2 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+						nextPiece3 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+						nextPiece4 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+						nextPiece5 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+						nextPiece6 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
+
+						glm::mat4 posicaoNextPiece = glm::mat4(g->getModel());
+						posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(15.5f, 21.0f, -10.0f));
+						nextPiece1->setModel(posicaoNextPiece);
+						posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+						nextPiece2->setModel(posicaoNextPiece);
+						posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+						nextPiece3->setModel(posicaoNextPiece);
+						posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+						nextPiece4->setModel(posicaoNextPiece);
+						posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+						nextPiece5->setModel(posicaoNextPiece);
+						posicaoNextPiece = glm::translate(posicaoNextPiece, glm::vec3(0.0f, -4.5f, 0.0f));
+						nextPiece6->setModel(posicaoNextPiece);
+
+						g->start(&currentPiece);
+						time = -1;
+
+						ImGui::OpenPopup("NICK?");
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::SetItemDefaultFocus();
+					ImGui::SameLine();
+					if (ImGui::Button("DEIXA QUIETO", ImVec2(ImGui::GetWindowSize().x / 2.0f - 15.0f, 0.0f)))
+					{
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::EndPopup();
+				}
+				if (ImGui::BeginPopupModal("NICK?", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+				{
+					ImGui::SetWindowFocus();
+					ImGui::SetWindowSize(ImVec2(500, 120));
+					ImGui::PushItemWidth(-55);
+					static char buf[64] = "";
+					ImGui::InputText("NICK", buf, 64, ImGuiInputTextFlags_CharsUppercase);
+					ImGui::PopItemWidth();
+
+					ImGui::Separator();
+
+					if (ImGui::Button("JOGAR", ImVec2(ImGui::GetWindowSize().x / 2.0f - 15.0f, 0.0f)))
+					{
+						ImGui::CloseCurrentPopup();
+						g->setName(buf);
+						player_1 = true;
+						paused = true;
+						menu = false;
+					}
+					ImGui::SetItemDefaultFocus();
+					ImGui::SameLine();
+					if (ImGui::Button("CANCELAR", ImVec2(ImGui::GetWindowSize().x / 2.0f - 15.0f, 0.0f)))
+					{
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::EndPopup();
 				}
 				if (ImGui::Button("2 JOGADORES", ImVec2(ImGui::GetWindowSize().x - 15.0f, 0.0f)))
 				{
@@ -218,6 +314,55 @@ int main()
 					player_1 = false;
 					paused = true;
 					menu = false;*/
+				}
+				if (ImGui::Button("TOPPERS", ImVec2(ImGui::GetWindowSize().x - 15.0f, 0.0f)))
+				{
+					ImGui::CloseCurrentPopup();
+					ImGui::OpenPopup("TOPPERS");
+				}
+				if (ImGui::BeginPopupModal("TOPPERS", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+				{
+					std::ifstream sf;
+					char buf[500][64];
+					int index, buf_index = 0;
+					std::vector<glm::vec2> vector_points;
+					std::vector<char*> vector_nicks;
+					sf.open("scores.sco", std::ifstream::in);
+
+					ImGui::SetWindowFocus();
+					ImGui::SetWindowSize(ImVec2(500, 600));
+
+					while (!sf.eof())
+					{
+						sf.getline(buf[buf_index], 64);
+						for (index = 0; buf[buf_index][index] != '\0' && buf[buf_index][index] != ';'; index++);
+						if (index < 2)
+							continue;
+						buf[buf_index][index] = '\0';
+						vector_points.push_back(glm::vec2(atoi(&buf[buf_index][index + 1]), buf_index));
+						vector_nicks.push_back(buf[buf_index++]);
+					}
+					std::sort(vector_points.begin(), vector_points.end(), my_comp);
+					
+					ImGui::Columns(2, NULL, NULL);
+					for (std::vector<glm::vec2>::iterator it = vector_points.begin(); it != vector_points.end(); it++)
+					{
+						if (ImGui::GetColumnIndex() == 0)
+							ImGui::Separator();
+						ImGui::Text("%s", vector_nicks.at(it->y));
+						ImGui::NextColumn();
+						ImGui::Text("%d", (int)it->x);
+						ImGui::NextColumn();
+					}
+					sf.close();
+					ImGui::Columns(1);
+
+					ImGui::Separator();
+					if (ImGui::Button("VOLTAR", ImVec2(ImGui::GetWindowSize().x - 30.0f, 0.0f)))
+					{
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::EndPopup();
 				}
 				if (ImGui::Button("ESCOLHAS", ImVec2(ImGui::GetWindowSize().x - 15.0f, 0.0f)))
 				{
@@ -246,6 +391,7 @@ int main()
 					menu = true;
 					options = false;
 					g->setLevel(level);
+					time = (int)(g->scale * glfwGetTime());
 				}
 				ImGui::SameLine(0, 15.0f);
 				if (ImGui::Button("CANCELAR", ImVec2(ImGui::GetWindowSize().x / 2.0f - 15.0f, 0.0f)))
@@ -273,32 +419,28 @@ int main()
 			ImGui::PopFont();
 
 			if (paused)
-			{
-				/*static bool demo = true;
-				if (demo)
-					ImGui::ShowDemoWindow(&demo);
-				else
-					paused = false;*/
-
 				ShowAppPauseOverlay(window);
-			}
 			else if (g->lost)
 			{
 				ImGui::SetNextWindowPosCenter();
 				if (ImGui::Begin("DERROTA", &g->lost, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNav))
 				{
-					ImGui::SetWindowSize(ImVec2(400, 130));
+					ImGui::SetWindowSize(ImVec2(400, 170));
 
 					ImGui::SetCursorPosX((ImGui::GetWindowSize().x - 110) / 2.0f - 15.0f);
 					ImGui::Text("PERDEU KKK!\n\n");
 					ImGui::PushItemWidth(-1);
 					if (ImGui::Button("MENU", ImVec2(ImGui::GetWindowSize().x - 15.0f, 0.0f)))
 					{
+						g->saveScore();
 						delete g;
 						g = new Grid(shader);
 
+						while(!bag.empty())
+							bag.pop_back();
 						for (int i = 0; i < 7; i++)
 							bag.push_back(i);
+
 						currentPiece = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
 						nextPiece1 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
 						nextPiece2 = new Piece(shader, (Piece::types)pop_bag(&bag, (random_type() % 7)), (Piece::rotation)(random_rotation() % 4));
@@ -322,7 +464,7 @@ int main()
 						nextPiece6->setModel(posicaoNextPiece);
 
 						g->start(&currentPiece);
-						time = (int)(g->scale * glfwGetTime());
+						time = -1;
 
 						ImGui::CloseCurrentPopup();
 						paused = false;
@@ -347,7 +489,7 @@ int main()
 				// ------
 				if ((g->endgame && g->change && glfwGetTime() - g->ENDGAME >= 0.6f) || collapse)
 				{
-					time = (int)(g->scale * glfwGetTime());
+					//time = (int)(g->scale * glfwGetTime());
 					g->change = false;
 					g->fallAllTheWay();
 					g->change = false;
@@ -422,6 +564,7 @@ int main()
 		glfwSwapBuffers(window);
 		
 	}
+	g->saveScore();
 	delete g;
 	currentPiece.~PiecePtr();
 	nextPiece1.~PiecePtr();
@@ -463,6 +606,7 @@ void processInput(GLFWwindow *window, PiecePtr p, Grid *g)
 	{
 		g->translate(false);
 		key_a_release = false;
+		g->ENDGAME = glfwGetTime();
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		g->scale = g->fastScale;
@@ -476,6 +620,7 @@ void processInput(GLFWwindow *window, PiecePtr p, Grid *g)
 	{
 		g->translate(true);
 		key_d_release = false;
+		g->ENDGAME = glfwGetTime();
 	}
 	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS && key_i_release)
 	{
@@ -728,7 +873,6 @@ static void ShowAppPauseOverlay(GLFWwindow* window)
 		}
 		if (ImGui::Button("MENU", ImVec2(ImGui::GetWindowSize().x - 15.0f, 0.0f)))
 		{
-			// are you sure?
 			ImGui::CloseCurrentPopup();
 			paused = false;
 			menu = true;

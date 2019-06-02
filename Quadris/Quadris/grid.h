@@ -4,6 +4,7 @@
 #include "shader_s.h"
 #include "pieces.h"
 #include <math.h>
+#include <fstream>
 
 class Block
 {
@@ -653,6 +654,25 @@ public:
 		fastScale = 2*level + 19.0f;
 	}
 
+	void saveScore()
+	{
+		int i;
+		for (i = 0; name[i] != '\0'; i++);
+		if (i > 1 && points > 0)
+		{
+			std::ofstream sf;
+			sf.open("scores.sco", std::fstream::app);
+			sf << name << ";" << points << std::endl;
+			sf.close();
+		}
+	}
+
+	void setName(char *n)
+	{
+		for(int i = 0; n[i] != '\0'; i++)
+			name[i] = n[i];
+	}
+
 private:
 	Block b[28][10];
 	PiecePtr *p;
@@ -660,6 +680,7 @@ private:
 	set startPositions[7][4], currentPiece, currentPieceShadow;
 	unsigned int text1, text2;
 	float points;
+	char name[64] = "";
 	int level;
 };
 

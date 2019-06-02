@@ -1,3 +1,8 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(377,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
   Quadris.cpp
+c:\users\pichau\documents\computacao grafica\projeto quadris\quadris\quadris\quadris.cpp(352): warning C4244: 'argumento': conversão de 'T' para 'const unsigned int', possível perda de dados
+          with
+          [
+              T=float
+          ]
   Quadris.vcxproj -> C:\Users\Pichau\Documents\Computacao Grafica\Projeto Quadris\Quadris\Quadris\.\Quadris.exe
