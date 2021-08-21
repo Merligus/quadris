@@ -1,4 +1,4 @@
-# quadris
+# Quadris
 ~= Tetris
 
-É um Tetris
+Tetris like game. Run Quadris/Quadris/Quadris.exe.
